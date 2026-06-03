@@ -10,3 +10,6 @@
 
 并且会基于自设的指令集设计c编译器，汇编器，操作系统
 详情请关注  [GitHub](https://github.com/Air-0000/AAOS/tree/master)
+
+
+新方向可能针对性添加**SNN**适配模块
