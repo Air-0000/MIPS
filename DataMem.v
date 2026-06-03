@@ -11,19 +11,21 @@ module DataMem(
 reg [31:0] data_mem [0:255]; // 256 x 32-bit数据内存
 
 // 字节序适配
+wire [31:0] mem_word = data_mem[addr[9:2]];
+
 `ifdef ENDIAN_LITTLE
-    // 小端模式：地址最低位对应最低有效字节
-    // 例如，地址0存储数据的最低8位，地址1存储次低8位，以此类推
-    // 这里我们假设数据内存是一个简单的寄存器数组来模拟
-    // 实际设计中需要考虑地址对齐和内存大小等问题
+    // 小端模式：字节交换
+    wire [31:0] read_data_wire = {mem_word[7:0],   mem_word[15:8],
+                                  mem_word[23:16], mem_word[31:24]};
+    wire [31:0] write_data_wire = {write_data[7:0],   write_data[15:8],
+                                   write_data[23:16], write_data[31:24]};
 `else
-    // 大端模式：地址最低位对应最高有效字节
-    // 例如，地址0存储数据的最高8位，地址1存储次高8位，以此类推
-    // 这里我们假设数据内存是一个简单的寄存器数组来模拟
-    // 实际设计中需要考虑地址对齐和内存大小等问题
+    // 大端模式：直接使用
+    wire [31:0] read_data_wire  = mem_word;
+    wire [31:0] write_data_wire = write_data;
 `endif
 
-assign read_data = (enable_read) ? data_mem[addr[9:2]] : 32'b0; // 4字节对齐地址
+assign read_data = (enable_read) ? read_data_wire : 32'b0; // 4字节对齐地址
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
@@ -32,10 +34,7 @@ always @(posedge clk or negedge rst_n) begin
         end
     end else begin
         if (enable_write) begin
-            // 写操作：将write_data写入数据内存（这里我们假设数据内存是一个简单的寄存器数组）
-            // 注意：实际设计中需要考虑地址对齐和内存大小等问题
-            // 这里我们简单地使用一个寄存器数组来模拟数据内存
-            data_mem[addr[9:2]] <= write_data; // 4字节对齐地址
+            data_mem[addr[9:2]] <= write_data_wire;
         end
     end
 
